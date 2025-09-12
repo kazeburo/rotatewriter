@@ -1,4 +1,4 @@
-package rotatelogger
+package rotatewriter
 
 import (
 	"os"
