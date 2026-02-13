@@ -5,7 +5,6 @@ updates:
     directory: /
     schedule:
       interval: daily
-      time: "00:00"
     commit-message:
       prefix: "ci:"
     groups:
@@ -17,7 +16,6 @@ updates:
     directory: /
     schedule:
       interval: daily
-      time: "00:00"
     commit-message:
       prefix: "go:"
     groups:
