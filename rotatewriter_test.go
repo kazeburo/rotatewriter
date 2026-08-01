@@ -14,7 +14,7 @@ func TestRotateWriter_BasicWriteAndRotate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create RotateWriter: %v", err)
 	}
-	defer w.Close()
+	defer deferClose(w, t)
 
 	// 1MB = 1024*1024 bytes, so write just under 1MB, then over
 	data := make([]byte, 1024*1024-10)
@@ -55,9 +55,9 @@ func TestRotateWriter_MaxBackups(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create RotateWriter: %v", err)
 	}
-	defer w.Close()
+	defer deferClose(w, t)
 	data := make([]byte, 1024*1024)
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		if _, err := w.Write(data); err != nil {
 			t.Fatalf("write failed: %v", err)
 		}
@@ -103,5 +103,13 @@ func TestRotateWriter_SymlinkError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create RotateWriter with regular file: %v", err)
 	}
-	defer w.Close()
+	defer deferClose(w, t)
+}
+
+// deferClose is a helper function to close the RotateWriter and report any errors during testing.
+func deferClose(w *RotateWriter, t *testing.T) {
+	err := w.Close()
+	if err != nil {
+		t.Errorf("failed to close RotateWriter: %v", err)
+	}
 }

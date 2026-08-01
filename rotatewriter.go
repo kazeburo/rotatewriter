@@ -102,8 +102,8 @@ func (w *RotateWriter) openFile() error {
 
 	fi, err := file.Stat()
 	if err != nil {
-		if cerr := file.Close(); cerr != nil {
-			return fmt.Errorf("stat failed: %w (close failed: %v)", err, cerr)
+		if errClose := file.Close(); errClose != nil {
+			return fmt.Errorf("stat failed: %w (close failed: %w)", err, errClose)
 		}
 		return err
 	}
@@ -132,6 +132,42 @@ func (w *RotateWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
+func (w *RotateWriter) rotateBackups() error {
+	if w.MaxBackups <= 0 {
+		return nil
+	}
+	file, err := os.ReadDir(w.dir)
+	if err != nil {
+		return err
+	}
+	var ints []int64
+	prefix := fmt.Sprintf("%s-", w.basename)
+	suffix := w.ext
+	for _, f := range file {
+		if strings.HasPrefix(f.Name(), prefix) && strings.HasSuffix(f.Name(), suffix) {
+			fname := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
+			n, err := strconv.ParseInt(fname, 10, 64)
+			if err != nil {
+				continue
+			}
+			ints = append(ints, n)
+		}
+	}
+
+	slices.Sort(ints)
+
+	if len(ints) > w.MaxBackups {
+		toDelete := len(ints) - w.MaxBackups
+		for i := range toDelete {
+			path := filepath.Join(w.dir, fmt.Sprintf("%s-%d%s", w.basename, ints[i], w.ext))
+			if err := os.Remove(path); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func (w *RotateWriter) rotate() error {
 	if err := w.file.Close(); err != nil {
 		w.file = nil
@@ -146,36 +182,8 @@ func (w *RotateWriter) rotate() error {
 		return err
 	}
 
-	if w.MaxBackups > 0 {
-		file, err := os.ReadDir(w.dir)
-		if err != nil {
-			return err
-		}
-		var ints []int64
-		prefix := fmt.Sprintf("%s-", w.basename)
-		suffix := w.ext
-		for _, f := range file {
-			if strings.HasPrefix(f.Name(), prefix) && strings.HasSuffix(f.Name(), suffix) {
-				fname := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
-				n, err := strconv.ParseInt(fname, 10, 64)
-				if err != nil {
-					continue
-				}
-				ints = append(ints, n)
-			}
-		}
-
-		slices.Sort(ints)
-
-		if len(ints) > w.MaxBackups {
-			toDelete := len(ints) - w.MaxBackups
-			for i := 0; i < toDelete; i++ {
-				path := filepath.Join(w.dir, fmt.Sprintf("%s-%d%s", w.basename, ints[i], w.ext))
-				if err := os.Remove(path); err != nil {
-					return err
-				}
-			}
-		}
+	if err := w.rotateBackups(); err != nil {
+		return err
 	}
 
 	if err := w.openFile(); err != nil {
