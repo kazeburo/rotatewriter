@@ -2,7 +2,6 @@ package rotatewriter
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"slices"
@@ -149,7 +148,7 @@ func (w *RotateWriter) rotateBackups() error {
 			fname := strings.TrimSuffix(strings.TrimPrefix(entry.Name(), prefix), suffix)
 			n, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
-				log.Printf("rotatewriter: skipping backup file with invalid timestamp %q: %v", entry.Name(), err)
+				fmt.Fprintf(os.Stderr, "rotatewriter: skipping backup file with invalid timestamp %q: %v\n", entry.Name(), err)
 				continue
 			}
 			backupTSs = append(backupTSs, n)
@@ -189,7 +188,7 @@ func (w *RotateWriter) rotate() error {
 	if err := w.rotateBackups(); err != nil {
 		// If backup rotation fails, we log the error but continue to open a new file.
 		// This is to ensure that logging can continue even if backup cleanup fails.
-		log.Printf("failed to rotate backups: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to rotate backups: %v\n", err)
 	}
 
 	if err := w.openFile(); err != nil {
