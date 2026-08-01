@@ -136,33 +136,35 @@ func (w *RotateWriter) rotateBackups() error {
 	if w.MaxBackups <= 0 {
 		return nil
 	}
-	file, err := os.ReadDir(w.dir)
+	entries, err := os.ReadDir(w.dir)
 	if err != nil {
 		return err
 	}
-	var ints []int64
+	var backupIds []int64
 	prefix := fmt.Sprintf("%s-", w.basename)
 	suffix := w.ext
-	for _, f := range file {
+	for _, f := range entries {
 		if strings.HasPrefix(f.Name(), prefix) && strings.HasSuffix(f.Name(), suffix) {
 			fname := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
 			n, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
 				continue
 			}
-			ints = append(ints, n)
+			backupIds = append(backupIds, n)
 		}
 	}
 
-	slices.Sort(ints)
+	slices.Sort(backupIds)
 
-	if len(ints) > w.MaxBackups {
-		toDelete := len(ints) - w.MaxBackups
-		for i := range toDelete {
-			path := filepath.Join(w.dir, fmt.Sprintf("%s-%d%s", w.basename, ints[i], w.ext))
-			if err := os.Remove(path); err != nil {
-				return err
-			}
+	if w.MaxBackups >= len(backupIds) {
+		return nil
+	}
+
+	toDelete := len(backupIds) - w.MaxBackups
+	for _, ts := range backupIds[:toDelete] {
+		path := filepath.Join(w.dir, fmt.Sprintf("%s-%d%s", w.basename, ts, w.ext))
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			return err
 		}
 	}
 	return nil
