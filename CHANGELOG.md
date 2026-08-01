@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.0.7](https://github.com/monitoring-forge/rotatewriter/compare/v0.0.6...v0.0.7) - 2026-08-01
+
+- ci: bump the dependencies group with 3 updates by @dependabot[bot] in https://github.com/monitoring-forge/rotatewriter/pull/28
+- docs: add usage, options, and rotation behavior to README by @kazeburo in https://github.com/monitoring-forge/rotatewriter/pull/30
+
 ## [v0.0.6](https://github.com/monitoring-forge/rotatewriter/compare/v0.0.5...v0.0.6) - 2026-07-17
 
 - Change module name from kazeburo to monitoring-forge by @kazeburo in https://github.com/monitoring-forge/rotatewriter/pull/26
