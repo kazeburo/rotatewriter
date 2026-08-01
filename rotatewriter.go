@@ -2,6 +2,7 @@ package rotatewriter
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"slices"
@@ -140,28 +141,29 @@ func (w *RotateWriter) rotateBackups() error {
 	if err != nil {
 		return err
 	}
-	var backupIds []int64
+	var backupTSs []int64
 	prefix := fmt.Sprintf("%s-", w.basename)
 	suffix := w.ext
-	for _, f := range entries {
-		if strings.HasPrefix(f.Name(), prefix) && strings.HasSuffix(f.Name(), suffix) {
-			fname := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
+	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), prefix) && strings.HasSuffix(entry.Name(), suffix) {
+			fname := strings.TrimSuffix(strings.TrimPrefix(entry.Name(), prefix), suffix)
 			n, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
+				log.Printf("rotatewriter: skipping backup file with invalid timestamp %q: %v", entry.Name(), err)
 				continue
 			}
-			backupIds = append(backupIds, n)
+			backupTSs = append(backupTSs, n)
 		}
 	}
 
-	slices.Sort(backupIds)
+	slices.Sort(backupTSs)
 
-	if w.MaxBackups >= len(backupIds) {
+	if w.MaxBackups >= len(backupTSs) {
 		return nil
 	}
 
-	toDelete := len(backupIds) - w.MaxBackups
-	for _, ts := range backupIds[:toDelete] {
+	toDelete := len(backupTSs) - w.MaxBackups
+	for _, ts := range backupTSs[:toDelete] {
 		path := filepath.Join(w.dir, fmt.Sprintf("%s-%d%s", w.basename, ts, w.ext))
 		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 			return err
@@ -185,7 +187,9 @@ func (w *RotateWriter) rotate() error {
 	}
 
 	if err := w.rotateBackups(); err != nil {
-		return err
+		// If backup rotation fails, we log the error but continue to open a new file.
+		// This is to ensure that logging can continue even if backup cleanup fails.
+		log.Printf("failed to rotate backups: %v", err)
 	}
 
 	if err := w.openFile(); err != nil {
