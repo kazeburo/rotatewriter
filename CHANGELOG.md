@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.0.8](https://github.com/monitoring-forge/rotatewriter/compare/v0.0.7...v0.0.8) - 2026-08-12
+
+- Sync files with `monitoring-forge/github-common` by @monitoring-forge-files-sync-action[bot] in https://github.com/monitoring-forge/rotatewriter/pull/31
+- Sync files with `monitoring-forge/github-common` by @monitoring-forge-files-sync-action[bot] in https://github.com/monitoring-forge/rotatewriter/pull/33
+- Sync files with `monitoring-forge/github-common` by @monitoring-forge-files-sync-action[bot] in https://github.com/monitoring-forge/rotatewriter/pull/34
+- chore: update go.mod and go.sum for saferio integration; replace openFile implementation with saferio.OpenAD by @kazeburo in https://github.com/monitoring-forge/rotatewriter/pull/35
+
 ## [v0.0.7](https://github.com/monitoring-forge/rotatewriter/compare/v0.0.6...v0.0.7) - 2026-08-01
 
 - ci: bump the dependencies group with 3 updates by @dependabot[bot] in https://github.com/monitoring-forge/rotatewriter/pull/28
