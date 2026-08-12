@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/monitoring-forge/saferio"
 )
 
 const (
@@ -86,16 +88,7 @@ func (w *RotateWriter) openFile() error {
 			return err
 		}
 	}
-	// Return an error if the target path is a symlink.
-	if fi, err := os.Lstat(w.Filename); err == nil {
-		if fi.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("file is a symlink: %s", w.Filename)
-		}
-	} else if !os.IsNotExist(err) {
-		return err
-	}
-
-	file, err := openFile(w.Filename)
+	file, err := saferio.OpenAD(w.Filename)
 	if err != nil {
 		return err
 	}
